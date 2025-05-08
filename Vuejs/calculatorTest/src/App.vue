@@ -24,10 +24,19 @@ export default {
         const op = e.currentTarget.value;
         console.log("operation('" + op + "') called");
 
-        if (op != "=") {
-          // 사칙연산 하기 전에 필수
-          // this.prev 는 operation 함수에서만 재정의 가능
-          this.prev = this.output;
+        // 현재 입력값이 없다면 -> 연산자를 연속으로 누르는 경우
+        if (this.cur === null) {
+          // 사칙연산자 연속 입력시 연산자 업데이트
+          if (op !== '=') {
+            this.operator = op;
+          }
+          else {
+            // this.prev = null;
+            this.operator = null;
+            return;
+          }
+          // = 연속 입력시 아무것도 변화 X
+          return;
         }
 
         if (this.prev != null) { // 직전 입력값이 존재한다면
@@ -35,23 +44,15 @@ export default {
           this.cur = Number(this.cur);
 
           switch (this.operator) {
-            case '+' :
-              this.prev = this.prev + this.cur;
-              break;
-            case '-' :
-              this.prev = this.prev - this.cur;
-              break;
-            case '*' :
-              this.prev = this.prev * this.cur;
-              break;
-            case '/' :
-              this.prev = this.prev / this.cur;
-              break;
+            case '+' : this.prev = this.prev + this.cur; break;
+            case '-' : this.prev = this.prev - this.cur; break;
+            case '*' : this.prev = this.prev * this.cur; break;
+            case '/' : this.prev = this.prev / this.cur; break;
           }
         }
-        // else { // 직전 입력값이 존재하지 않는다면
-        //   this.prev = this.cur; // cur를 prev로 백업
-        // }
+        else { // 직전 입력값이 존재하지 않는다면
+          this.prev = this.cur; // cur를 prev로 백업
+        }
 
         this.cur = null;
         this.output = this.prev;
@@ -68,6 +69,23 @@ export default {
       number(e) {
         const num = e.currentTarget.value;
         console.log("number('" + num + "') called");
+
+        // = 이후 숫자 누르면 기존 입력 무시
+        if (this.output !== null && this.cur === null && this.operator === null) {
+          this.prev   = null;
+          // if (this.output?.includes('.') && num === '.') {
+
+          // }
+
+          if (num === '.') {
+              this.cur = this.output + num;
+              this.output = this.cur;
+              return;
+          } else {
+            this.cur = null;
+            this.output = null;
+          }
+        }
 
         // 소숫점은 한번만 허용
         if (this.cur != null && this.cur.includes('.') && num === '.') {
