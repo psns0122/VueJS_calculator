@@ -34,4 +34,5 @@
     <p>나이 : {{ age }}</p>
     <p>주소 : {{ address }}</p>
     <p>번호 : {{ number }}</p>
+    <button @click="$emit('aiai')">클릭</button>
 </template>

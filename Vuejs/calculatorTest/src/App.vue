@@ -2,6 +2,8 @@
 export default {
     data() {
       return {
+        darkMode: false,  // 다크 모드 on/off
+
         output : null, // 양방향 바인딩을 위한 변수
         cur : null, // 현재 입력된 값을 가지는 변수
         prev : null, // 연산자 입력전까지 숫자값(혹은 누적결과값)을 가지는 변수
@@ -10,6 +12,11 @@ export default {
     },
 
     methods:{
+      // 다크 모드 토글
+      toggleDarkMode() {
+        this.darkMode = !this.darkMode;
+      },
+
       // 초기화 함수
       clear() {
         console.log("clear() called");
@@ -39,7 +46,7 @@ export default {
           return;
         }
 
-        if (this.prev != null) { // 직전 입력값이 존재한다면
+        if (this.operator !== null) { // 직전 입력값이 존재한다면
           this.prev = Number(this.prev);
           this.cur = Number(this.cur);
 
@@ -70,23 +77,32 @@ export default {
         const num = e.currentTarget.value;
         console.log("number('" + num + "') called");
 
-        // = 이후 숫자 누르면 기존 입력 무시
-        if (this.output !== null && this.cur === null && this.operator === null) {
-          this.prev   = null;
-          // if (this.output?.includes('.') && num === '.') {
+        // = 이후 숫자 누르면 기존 입력 무시 & 특별 처리
+        if (this.operator === null && this.cur === null && this.output !== null) {
 
-          // }
-
+          // 이미 소수점 있으면 무시
           if (num === '.') {
-              this.cur = this.output + num;
-              this.output = this.cur;
+            if (String(this.output).includes('.')) {
               return;
-          } else {
-            this.cur = null;
-            this.output = null;
+            }
+            // 없다면 결과값 뒤에 소수점 붙여서 cur 생성
+            this.cur = String(this.output) + num;
           }
+          
+          // 소숫점이 없는 경우
+          // 새로운 숫자 입력이니 prev 리셋 후 cur에 숫자 채우기
+          else {
+            this.prev = null;
+            this.cur = num;
+          }
+          
+          // 소숫점이 있든 없든 일단
+          // 화면 갱신, 그리고 종료
+          this.output = this.cur;
+          return;
         }
 
+        // 정상 흐름
         // 소숫점은 한번만 허용
         if (this.cur != null && this.cur.includes('.') && num === '.') {
           return;
@@ -100,14 +116,51 @@ export default {
         }
 
         this.output = this.cur;
-      }
+      },
+
+      // 키보드 입력 핸들러
+      handleKeydown(e) {
+        const key = e.key;
+
+        // 숫자 또는 소수점
+        if ((/^[0-9]$/).test(key) || key === '.') {
+          this.number({ currentTarget: { value: key }});
+          return;
+        }
+
+        // 사칙연산자
+        if (['+', '-', '*', '/'].includes(key)) {
+          this.operation({ currentTarget: { value: key }});
+          return;
+        }
+
+        // = 또는 Enter
+        if (key === '=' || key === 'Enter') {
+          this.operation({ currentTarget: { value: '=' }});
+          return;
+        }
+
+        // C 또는 c 또는 Esc
+        if (key.toLowerCase() === 'c' || key === 'Escape') {
+          this.clear();
+        }
+      },
+    },
+      
+    mounted() {
+      window.addEventListener('keydown', this.handleKeydown);
+    },
+
+    beforeUnmount() {
+      window.removeEventListener('keydown', this.handleKeydown);
     },
   }
 </script>
 
 <template>
-    <div class="calculator">
-      <form name="forms">
+    <div :class="darkMode ? 'calculator dark' : 'calculator'">
+      <input type="button" :value="darkMode? '기본모드' : '다크모드'" @click="toggleDarkMode" style="float: right; margin-bottom: 8px;"/>
+      <form name="forms" style="clear: both;">
         <input type="text" name="output" v-model="output" readonly />
         <input type="button" class="clear" value="C" @click="clear"/>
         <input type="button" class="operator" value="/" @click="operation"/>
@@ -130,6 +183,7 @@ export default {
     </div>
 </template>
 
+<!-- 기본모드 -->
 <style>
 * {
   margin: 0;
@@ -193,5 +247,54 @@ body {
 
 .calculator form .result {
   grid-column: span 2;
+}
+</style>
+
+<!-- 다크모드 -->
+<style>
+/* ─ Dark Mode ─ */
+.calculator.dark {
+  background-color: #2e2e2e;
+  border-color:   #555;
+}
+
+.calculator.dark form input {
+  background-color: #3b3b3b;
+  color:            #eee;
+  border:           2px solid #555;
+}
+
+.calculator.dark form input:hover {
+  box-shadow: 1px 1px 2px #999;
+}
+
+/* 텍스트 필드 */
+.calculator.dark form input[type='text'] {
+  background-color: #444;
+  color:            #fff;
+}
+
+/* CE 버튼 */
+.calculator.dark form .clear {
+  background-color: #a83232;   /* 진한 붉은색 */
+  color:            #fff;
+}
+
+/* 연산자 버튼 */
+.calculator.dark form .operator {
+  background-color: #c67f00;   /* 어두운 오렌지 */
+  color:            #fff;
+}
+
+/* 소수점 버튼 */
+.calculator.dark form .dot {
+  background-color: #2a7f3c;   /* 어두운 초록 */
+  color:            #fff;
+}
+
+/* = 버튼 */
+.calculator.dark form .result {
+  background-color: #1f6fb2;   /* 어두운 파랑 */
+  color:            #fff;
 }
 </style>

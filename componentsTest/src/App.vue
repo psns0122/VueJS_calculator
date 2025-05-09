@@ -15,6 +15,10 @@ export default {
   methods: {
     submit() {
         this.visible = true;
+    },
+    print() {
+
+        alert("dkssud!");
     }
   }
 };
@@ -33,7 +37,7 @@ export default {
         v-bind:name="user_name"
         v-bind:age="user_age" 
         v-bind:address="user_address"
-        v-bind:number="user_number"/>
+        v-bind:number="user_number" @aiai="print"/>
   </div>
 </template>
 
